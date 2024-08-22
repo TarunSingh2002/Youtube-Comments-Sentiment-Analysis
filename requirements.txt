@@ -1,0 +1,7 @@
+google-api-python-client
+python-dotenv
+Flask
+aws-wsgi
+transformers
+tensorflow
+pandas

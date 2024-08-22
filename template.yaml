@@ -1,0 +1,61 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  YoutubeCommentsSentimentAnalysisApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+  YoutubeCommentsSentimentAnalysisFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      ImageUri: Account.dkr.ecr.Region.amazonaws.com/YoutubeCommentsSentimentAnalysis:latest
+      Timeout: 900
+      MemorySize: 600
+      Role: !GetAtt YoutubeCommentsSentimentAnalysisExecutionRole.Arn
+      Environment:
+        Variables:
+          S3_BASE_URL: "https://yt-comment-section-sentiment-analysis.s3.amazonaws.com/static"
+      Events:
+        YoutubeCommentsSentimentAnalysisAPi:
+          Type: Api
+          Properties:
+            Path: /
+            Method: ANY
+            RestApiId: !Ref YoutubeCommentsSentimentAnalysisApiGateway
+  YoutubeCommentsSentimentAnalysisExecutionRole:
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument: 
+        Version: '2012-10-17'
+        Statement: 
+          - Effect: Allow
+            Principal: 
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaExecutionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource: arn:aws:s3:::yt-comment-section-sentiment-analysis/*
+              - Effect: Allow
+                Action:
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:BatchGetImage
+                  - ecr:BatchCheckLayerAvailability
+                Resource: "*"
+Outputs:
+  ApiUrl:
+    Description: "API Gateway URL"
+    Value: !Sub "https://${YoutubeCommentsSentimentAnalysisApiGateway}.execute-api.Region.amazonaws.com/Prod/"

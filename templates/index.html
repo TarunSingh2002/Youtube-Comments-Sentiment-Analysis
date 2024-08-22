@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Youtube Comments Sentiment Analysis</title>
+    <link rel="icon" href="https://yt-comment-section-sentiment-analysis.s3.amazonaws.com/favicon.ico">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    
+    <form method="POST">
+        <label for="video_url">Enter YouTube Video URL:</label><br><br>
+        <input type="text" id="video_url" name="video_url" required><br><br>
+        <input type="submit" value="Get Top Comment">
+    </form>
+
+    {% if comment %}
+        <h2>Top Comment:</h2>
+        <p>{{ comment }}</p>
+    {% elif error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+</body>
+</html>
