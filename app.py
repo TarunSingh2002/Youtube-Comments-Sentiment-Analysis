@@ -7,7 +7,7 @@ import tensorflow as tf
 from dotenv import load_dotenv
 from googletrans import Translator
 from googleapiclient.discovery import build
-from transformers import AutoTokenizer, TFAutoModel
+from transformers import AutoTokenizer
 from flask import Flask, render_template, request, render_template_string
 
 app = Flask(__name__)
@@ -27,7 +27,7 @@ def load_model_and_tokenizer():
         fine_tuned_tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
         fine_tuned_model = tf.saved_model.load(model_path)
 
-class_labels = ['sadness','joy','love','anger','fear','surprise']
+class_labels = ['Sadness','Joy','Love','Annoyed','Fear','Surprise']
 
 def build_youtube_client(api_key):
     return build('youtube', 'v3', developerKey=api_key)
@@ -97,7 +97,7 @@ def index():
         video_id = extract_youtube_video_id(video_url)
 
         if video_id:
-            comments_df = get_comments(video_id,max_results=10)
+            comments_df = get_comments(video_id,max_results=250)
             if not comments_df.empty:
                 sentiment_list = get_sentiment(comments_df)
                 print(sentiment_list)
@@ -112,14 +112,20 @@ def index():
 
 def detect_and_translate(text):
     translator = Translator()
-    
-    detection = translator.detect(text)
-    
-    if detection.lang != 'en':
-        translation = translator.translate(text, dest='en')
-        return translation.text
-    else:
-        return text
+    try:
+        detection = translator.detect(text)
+        
+        if detection.lang != 'en':
+            translation = translator.translate(text, dest='en')
+            if translation and translation.text:
+                return translation.text
+            else:
+                return 'This is a neutral text'
+        else:
+            return text
+    except Exception as e:
+        print(f"Translation error: {e}")
+        return 'This is a neutral text' 
 
 def return_sentiment(text : str) -> np.int64 :
     inputs = fine_tuned_tokenizer(text, return_tensors="tf", padding="max_length", truncation=True, max_length=55)
