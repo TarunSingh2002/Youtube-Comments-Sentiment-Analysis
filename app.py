@@ -18,8 +18,15 @@ api_keys = os.getenv("YOUTUBE_API_KEYS").split(',')
 tokenizer_path = r'C:\Users\tarun\Desktop\Youtube-Comments-Sentiments-Analysis\model\saved_tokenizer'
 model_path = r'C:\Users\tarun\Desktop\Youtube-Comments-Sentiments-Analysis\model\transformer'
 
-fine_tuned_tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
-fine_tuned_model = tf.saved_model.load(model_path)
+fine_tuned_tokenizer = None
+fine_tuned_model = None
+
+def load_model_and_tokenizer():
+    global fine_tuned_tokenizer, fine_tuned_model
+    if fine_tuned_tokenizer is None or fine_tuned_model is None:
+        fine_tuned_tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
+        fine_tuned_model = tf.saved_model.load(model_path)
+
 class_labels = ['sadness','joy','love','anger','fear','surprise']
 
 def build_youtube_client(api_key):
@@ -85,6 +92,7 @@ def trim_whitespace(s):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
+        load_model_and_tokenizer()
         video_url = trim_whitespace(request.form.get('video_url'))
         video_id = extract_youtube_video_id(video_url)
 
