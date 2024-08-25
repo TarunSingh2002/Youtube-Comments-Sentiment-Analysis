@@ -1,16 +1,26 @@
 import os
 import re
 import awsgi
+import numpy as np
 import pandas as pd
+import tensorflow as tf
 from dotenv import load_dotenv
 from googletrans import Translator
 from googleapiclient.discovery import build
+from transformers import AutoTokenizer, TFAutoModel
 from flask import Flask, render_template, request, render_template_string
 
 app = Flask(__name__)
 
 load_dotenv()
 api_keys = os.getenv("YOUTUBE_API_KEYS").split(',')
+
+tokenizer_path = r'C:\Users\tarun\Desktop\Youtube-Comments-Sentiments-Analysis\model\saved_tokenizer'
+model_path = r'C:\Users\tarun\Desktop\Youtube-Comments-Sentiments-Analysis\model\transformer'
+
+fine_tuned_tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
+fine_tuned_model = tf.saved_model.load(model_path)
+class_labels = ['sadness','joy','love','anger','fear','surprise']
 
 def build_youtube_client(api_key):
     return build('youtube', 'v3', developerKey=api_key)
@@ -79,8 +89,10 @@ def index():
         video_id = extract_youtube_video_id(video_url)
 
         if video_id:
-            comments_df = get_comments(video_id)
+            comments_df = get_comments(video_id,max_results=10)
             if not comments_df.empty:
+                sentiment_list = get_sentiment(comments_df)
+                print(sentiment_list)
                 top_comment = comments_df.iloc[0]["Comment"]
                 return render_template('index.html', comment=top_comment)
             else:
@@ -100,6 +112,27 @@ def detect_and_translate(text):
         return translation.text
     else:
         return text
+
+def return_sentiment(text : str) -> np.int64 :
+    inputs = fine_tuned_tokenizer(text, return_tensors="tf", padding="max_length", truncation=True, max_length=55)
+    input_dict = {
+        'input_ids': tf.cast(inputs['input_ids'], tf.int64),
+        'attention_mask': tf.cast(inputs['attention_mask'], tf.int64),
+        'token_type_ids': tf.cast(inputs['token_type_ids'], tf.int64)
+        }
+    outputs = fine_tuned_model(input_dict)
+    probabilities = tf.nn.softmax(outputs, axis=-1) 
+    probabilities_np = probabilities.numpy()[0] 
+    predicted_index = np.argmax(probabilities_np)
+    return predicted_index
+
+def get_sentiment(comments_df : pd.DataFrame) -> list:
+    sentiment_list=[0,0,0,0,0,0]
+    for index, row in comments_df.iterrows():
+        translated_comment = detect_and_translate(row['Comment'])
+        sentiment = return_sentiment(translated_comment)  
+        sentiment_list[sentiment] += 1
+    return sentiment_list
 
 if __name__ == "__main__":
     app.run(debug=True)
