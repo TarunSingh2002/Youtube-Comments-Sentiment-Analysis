@@ -15,8 +15,8 @@ app = Flask(__name__)
 load_dotenv()
 api_keys = os.getenv("YOUTUBE_API_KEYS").split(',')
 
-tokenizer_path = r'C:\Users\tarun\Desktop\Youtube-Comments-Sentiments-Analysis\model\saved_tokenizer'
-model_path = r'C:\Users\tarun\Desktop\Youtube-Comments-Sentiments-Analysis\model\transformer'
+tokenizer_path = 'model/saved_tokenizer'
+model_path = 'model/transformer'
 
 fine_tuned_tokenizer = None
 fine_tuned_model = None
