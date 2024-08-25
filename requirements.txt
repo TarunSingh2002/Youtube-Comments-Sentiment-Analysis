@@ -2,6 +2,10 @@ google-api-python-client
 python-dotenv
 Flask
 aws-wsgi
-transformers
+transformers==4.42.4
 tensorflow
 pandas
+datasets
+tf-keras
+sentencepiece 
+googletrans==4.0.0-rc1

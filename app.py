@@ -3,6 +3,7 @@ import re
 import awsgi
 import pandas as pd
 from dotenv import load_dotenv
+from googletrans import Translator
 from googleapiclient.discovery import build
 from flask import Flask, render_template, request, render_template_string
 
@@ -88,6 +89,17 @@ def index():
             return render_template('index.html', error="Invalid link, please try another link.")
     
     return render_template('index.html')
+
+def detect_and_translate(text):
+    translator = Translator()
+    
+    detection = translator.detect(text)
+    
+    if detection.lang != 'en':
+        translation = translator.translate(text, dest='en')
+        return translation.text
+    else:
+        return text
 
 if __name__ == "__main__":
     app.run(debug=True)
