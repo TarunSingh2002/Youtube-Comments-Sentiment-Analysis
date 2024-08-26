@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from googletrans import Translator
 from googleapiclient.discovery import build
 from transformers import AutoTokenizer
-from flask import Flask, render_template, request, render_template_string
+from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
@@ -26,8 +26,11 @@ def load_model_and_tokenizer():
     if fine_tuned_tokenizer is None or fine_tuned_model is None:
         fine_tuned_tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
         fine_tuned_model = tf.saved_model.load(model_path)
+        print("model is loaded successfully")
 
-class_labels = ['Sadness','Joy','Love','Annoyed','Fear','Surprise']
+SENTIMENT_LABELS = {0: 'Sadness', 1: 'Joy', 2: 'Love', 3: 'Annoyed', 4: 'Fear', 5: 'Surprise'}
+
+#  Get the comments form video
 
 def build_youtube_client(api_key):
     return build('youtube', 'v3', developerKey=api_key)
@@ -89,26 +92,7 @@ def extract_youtube_video_id(url):
 def trim_whitespace(s):
     return s.strip()
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    if request.method == 'POST':
-        load_model_and_tokenizer()
-        video_url = trim_whitespace(request.form.get('video_url'))
-        video_id = extract_youtube_video_id(video_url)
-
-        if video_id:
-            comments_df = get_comments(video_id,max_results=250)
-            if not comments_df.empty:
-                sentiment_list = get_sentiment(comments_df)
-                print(sentiment_list)
-                top_comment = comments_df.iloc[0]["Comment"]
-                return render_template('index.html', comment=top_comment)
-            else:
-                return render_template('index.html', error="No comments found for this video.")
-        else:
-            return render_template('index.html', error="Invalid link, please try another link.")
-    
-    return render_template('index.html')
+# Get the Sentiments form the text
 
 def detect_and_translate(text):
     translator = Translator()
@@ -140,13 +124,47 @@ def return_sentiment(text : str) -> np.int64 :
     predicted_index = np.argmax(probabilities_np)
     return predicted_index
 
-def get_sentiment(comments_df : pd.DataFrame) -> list:
-    sentiment_list=[0,0,0,0,0,0]
+def get_sentiment(comments_df : pd.DataFrame) -> tuple:
+    sentiment_counts = {'Sadness': 0, 'Joy': 0, 'Love': 0, 'Annoyed': 0, 'Fear': 0, 'Surprise': 0}
+    comments_by_sentiment = {'Sadness': [], 'Joy': [], 'Love': [], 'Annoyed': [], 'Fear': [], 'Surprise': []}
     for index, row in comments_df.iterrows():
         translated_comment = detect_and_translate(row['Comment'])
-        sentiment = return_sentiment(translated_comment)  
-        sentiment_list[sentiment] += 1
-    return sentiment_list
+        sentiment_index = return_sentiment(translated_comment)  
+        sentiment_label = SENTIMENT_LABELS[sentiment_index] 
+        sentiment_counts[sentiment_label]+=1
+        comments_by_sentiment[sentiment_label].append(translated_comment)
+    return (sentiment_counts,comments_by_sentiment)
+
+# App Endpoints
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+        load_model_and_tokenizer()
+        video_url = trim_whitespace(request.form.get('video_url'))
+        print(f"url link is :-",video_url)
+        video_id = extract_youtube_video_id(video_url)
+        print(f"video_id is :-",video_id)
+        comment_count = int(request.form.get('comment_count', 10))
+        print(f"comment_count is :-",comment_count)
+        if video_id:
+            comments_df = get_comments(video_id,max_results=comment_count*2)
+            comments_df.to_csv('comments_df.csv')
+            if not comments_df.empty:
+                output = get_sentiment(comments_df)
+                sentiment_counts = output[0]
+                comments_by_sentiment = output[1]
+                print(f"sentiment_counts is :-",sentiment_counts)
+                print(f"comments_by_sentiment is :-",comments_by_sentiment)
+                top_comment = comments_df.iloc[0]["Comment"]
+                print(f"top_comment link is :-",top_comment)
+                return render_template('index.html', comment=top_comment,sentiment_counts=sentiment_counts, comments_by_sentiment=comments_by_sentiment)
+            else:
+                return render_template('index.html', error="No comments found for this video.")
+        else:
+            return render_template('index.html', error="Invalid link, please try another link.")
+    
+    return render_template('index.html', sentiment_counts={}, comments_by_sentiment={})
 
 if __name__ == "__main__":
     app.run(debug=True)
