@@ -7,5 +7,7 @@ tensorflow
 pandas
 datasets
 tf-keras
+textblob
+emoji
 sentencepiece 
 googletrans==4.0.0-rc1
