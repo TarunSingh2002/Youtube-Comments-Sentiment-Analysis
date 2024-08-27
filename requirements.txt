@@ -1,9 +1,9 @@
 google-api-python-client
 python-dotenv
-Flask
+streamlit
 aws-wsgi
 transformers==4.42.4
-tensorflow
+tensorflow==2.17.0
 pandas
 datasets
 tf-keras

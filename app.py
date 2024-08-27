@@ -2,18 +2,14 @@ import os
 import re
 import emoji
 import awsgi
-import string
 import numpy as np
 import pandas as pd
+import streamlit as st
 import tensorflow as tf
-from textblob import TextBlob
 from dotenv import load_dotenv
 from googletrans import Translator
 from googleapiclient.discovery import build
 from transformers import AutoTokenizer
-from flask import Flask, render_template, request
-
-app = Flask(__name__)
 
 load_dotenv()
 api_keys = os.getenv("YOUTUBE_API_KEYS").split(',')
@@ -97,14 +93,6 @@ def trim_whitespace(s):
 
 # Text Pre Processing
 
-def remove_punc(text):
-    exclude = string.punctuation
-    return text.translate(str.maketrans('', '', exclude))
-
-# def spelling_correction(text):
-#     textBlb = TextBlob(text)
-#     return textBlb.correct().string
-
 def remove_emojis(text):
   return emoji.replace_emoji(text, replace="")
 
@@ -166,10 +154,6 @@ def return_sentiment(text : str) -> np.int64 :
 def text_pre_processing(translated_comment: pd.DataFrame) -> pd.DataFrame:
     # lower casing
     translated_comment['Comment']=translated_comment['Comment'].str.lower()
-    # removing punctuations
-    translated_comment['Comment']=translated_comment['Comment'].apply(remove_punc)
-    # spelling corrections
-    # translated_comment['Comment']=translated_comment['Comment'].apply(spelling_correction)
     # remove emoji
     translated_comment['Comment']=translated_comment['Comment'].apply(remove_emojis)
     return translated_comment
@@ -179,7 +163,6 @@ def get_sentiment(comments_df : pd.DataFrame,comment_count=10) -> tuple:
     comments_by_sentiment = {'Sadness': [], 'Joy': [], 'Love': [], 'Annoyed': [], 'Fear': [], 'Surprise': []}
     translated_comment = detect_and_translate(comments_df,comment_count)
     pre_processed_comments = text_pre_processing(translated_comment)
-    pre_processed_comments.to_csv("final_df.csv")
     for index, row in pre_processed_comments.iterrows():
         sentiment_index = return_sentiment(row['Comment'])  
         sentiment_label = SENTIMENT_LABELS[sentiment_index] 
@@ -187,36 +170,30 @@ def get_sentiment(comments_df : pd.DataFrame,comment_count=10) -> tuple:
         comments_by_sentiment[sentiment_label].append(row['Comment'])
     return (sentiment_counts,comments_by_sentiment)
 
-# App Endpoints
+# Streamlit App
+st.title("YouTube Comments Sentiment Analysis")
+video_url = st.text_input("Enter YouTube Video URL:")
+comment_count = st.selectbox("Select Number of Comments:", [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 125, 150, 175, 200, 250], index=0)
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    if request.method == 'POST':
+if st.button("Get Sentiments"):
+    if video_url:
         load_model_and_tokenizer()
-        video_url = trim_whitespace(request.form.get('video_url'))
-        # print(f"url link is :-",video_url)
+        video_url = trim_whitespace(video_url)
         video_id = extract_youtube_video_id(video_url)
-        # print(f"video_id is :-",video_id)
-        comment_count = int(request.form.get('comment_count', 10))
-        # print(f"comment_count is :-",comment_count)
+        
         if video_id:
-            comments_df = get_comments(video_id,max_results=comment_count*2)
-            # print(f"the size of dataframe :- {comments_df.shape[0]}")
+            comments_df = get_comments(video_id, max_results=comment_count*2)
+            
             if not comments_df.empty:
-                output = get_sentiment(comments_df,comment_count)
-                sentiment_counts = output[0]
-                comments_by_sentiment = output[1]
-                # print(f"sentiment_counts is :-",sentiment_counts)
-                # print(f"comments_by_sentiment is :-",comments_by_sentiment)
-                top_comment = comments_df.iloc[0]["Comment"]
-                # print(f"top_comment link is :-",top_comment)
-                return render_template('index.html', comment=top_comment,sentiment_counts=sentiment_counts, comments_by_sentiment=comments_by_sentiment)
-            else:
-                return render_template('index.html', error="No comments found for this video.")
-        else:
-            return render_template('index.html', error="Invalid link, please try another link.")
-    
-    return render_template('index.html', sentiment_counts={}, comments_by_sentiment={})
+                sentiment_counts, comments_by_sentiment = get_sentiment(comments_df, comment_count)
 
-if __name__ == "__main__":
-    app.run(debug=True)
+                for sentiment, count in sentiment_counts.items():
+                    with st.expander(f"{sentiment} :- {count} comments", expanded=False):
+                        for comment in comments_by_sentiment[sentiment]:
+                            st.write(comment)
+            else:
+                st.error("No comments found for this video.")
+        else:
+            st.error("Invalid link, please try another link.")
+    else:
+        st.error("Please enter a YouTube video URL.")
