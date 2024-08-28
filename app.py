@@ -4,13 +4,14 @@ import emoji
 import awsgi
 import numpy as np
 import pandas as pd
-import streamlit as st
 import tensorflow as tf
 from dotenv import load_dotenv
 from googletrans import Translator
-from googleapiclient.discovery import build
 from transformers import AutoTokenizer
+from googleapiclient.discovery import build
+from flask import Flask, request, jsonify, render_template
 
+app = Flask(__name__)
 load_dotenv()
 api_keys = os.getenv("YOUTUBE_API_KEYS").split(',')
 
@@ -19,7 +20,9 @@ model_path = 'model/transformer'
 
 fine_tuned_tokenizer = None
 fine_tuned_model = None
+SENTIMENT_LABELS = {0: 'Sadness', 1: 'Joy', 2: 'Love', 3: 'Annoyed', 4: 'Fear', 5: 'Surprise'}
 
+# load model and tokenizer
 def load_model_and_tokenizer():
     global fine_tuned_tokenizer, fine_tuned_model
     if fine_tuned_tokenizer is None or fine_tuned_model is None:
@@ -27,10 +30,7 @@ def load_model_and_tokenizer():
         fine_tuned_model = tf.saved_model.load(model_path)
         # print("model is loaded successfully")
 
-SENTIMENT_LABELS = {0: 'Sadness', 1: 'Joy', 2: 'Love', 3: 'Annoyed', 4: 'Fear', 5: 'Surprise'}
-
 #  Get the comments form video
-
 def build_youtube_client(api_key):
     return build('youtube', 'v3', developerKey=api_key)
 
@@ -92,12 +92,10 @@ def trim_whitespace(s):
     return s.strip()
 
 # Text Pre Processing
-
 def remove_emojis(text):
   return emoji.replace_emoji(text, replace="")
 
 # Get the Sentiments form the text
-
 def detect_and_translate(comments: pd.DataFrame, required_count=10):
     translator = Translator()
     translated_comments = []
@@ -170,30 +168,30 @@ def get_sentiment(comments_df : pd.DataFrame,comment_count=10) -> tuple:
         comments_by_sentiment[sentiment_label].append(row['Comment'])
     return (sentiment_counts,comments_by_sentiment)
 
-# Streamlit App
-st.title("YouTube Comments Sentiment Analysis")
-video_url = st.text_input("Enter YouTube Video URL:")
-comment_count = st.selectbox("Select Number of Comments:", [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 125, 150, 175, 200, 250], index=0)
-
-if st.button("Get Sentiments"):
-    if video_url:
+# Flask App
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
         load_model_and_tokenizer()
-        video_url = trim_whitespace(video_url)
+        video_url = trim_whitespace(request.form.get('video_url'))
         video_id = extract_youtube_video_id(video_url)
-        
+        comment_count = int(request.form.get('comment_count', 10))
+
         if video_id:
-            comments_df = get_comments(video_id, max_results=comment_count*2)
-            
+            comments_df = get_comments(video_id, max_results=comment_count * 2)
             if not comments_df.empty:
                 sentiment_counts, comments_by_sentiment = get_sentiment(comments_df, comment_count)
-
-                for sentiment, count in sentiment_counts.items():
-                    with st.expander(f"{sentiment} :- {count} comments", expanded=False):
-                        for comment in comments_by_sentiment[sentiment]:
-                            st.write(comment)
+                top_comment = comments_df.iloc[0]["Comment"]
+                return render_template('index.html', 
+                                       comment=top_comment, 
+                                       sentiment_counts=sentiment_counts, 
+                                       comments_by_sentiment=comments_by_sentiment)
             else:
-                st.error("No comments found for this video.")
+                return render_template('index.html', error="No comments found for this video.")
         else:
-            st.error("Invalid link, please try another link.")
-    else:
-        st.error("Please enter a YouTube video URL.")
+            return render_template('index.html', error="Invalid link, please try another link.")
+    
+    return render_template('index.html', sentiment_counts={}, comments_by_sentiment={})
+
+if __name__ == "__main__":
+    app.run(debug=True)
