@@ -100,41 +100,49 @@ def detect_and_translate(comments: pd.DataFrame, required_count=10):
     translator = Translator()
     translated_comments = []
     hindi_comments = []
+    other_language_comments = []
+
+    # Step 1: Detect language and categorize comments
     for index, row in comments.iterrows():
         comment = row['Comment']
         try:
             detection = translator.detect(comment)
             if detection.lang == 'en':
-                translated_comments.append(comment)
+                other_language_comments.append(comment)
             elif detection.lang == 'hi':
                 hindi_comments.append(comment)
             else:
                 translation = translator.translate(comment, dest='en')
                 if translation and translation.text:
-                    translated_comments.append(translation.text)
+                    other_language_comments.append(translation.text)
                 else:
-                    translated_comments.append('This is a neutral text')
+                    other_language_comments.append('This is a neutral text')
         except Exception as e:
             print(f"Translation error for comment at index {index}: {e}")
-            translated_comments.append('This is a neutral text')
-        if len(translated_comments) >= required_count:
-            break
-    if len(translated_comments) < required_count:
-        for comment in hindi_comments:
-            try:
-                translation = translator.translate(comment, dest='en')
-                if translation and translation.text:
-                    translated_comments.append(translation.text)
-                else:
-                    translated_comments.append('This is a neutral text')
-            except Exception as e:
-                print(f"Translation error: {e}")
+            other_language_comments.append('This is a neutral text')
+    
+    # Step 2: Sort comments by word length
+    other_language_comments.sort(key=lambda x: len(x.split()), reverse=True)
+    hindi_comments.sort(key=lambda x: len(x.split()), reverse=True)
+    
+    # Step 3: Collect the required number of comments
+    while len(translated_comments) < required_count and other_language_comments:
+        translated_comments.append(other_language_comments.pop(0))
+    
+    while len(translated_comments) < required_count and hindi_comments:
+        try:
+            translation = translator.translate(hindi_comments.pop(0), dest='en')
+            if translation and translation.text:
+                translated_comments.append(translation.text)
+            else:
                 translated_comments.append('This is a neutral text')
-            
-            if len(translated_comments) >= required_count:
-                break   
+        except Exception as e:
+            print(f"Translation error: {e}")
+            translated_comments.append('This is a neutral text')
+
+    # Step 4: Return the result as a DataFrame
     result_df = pd.DataFrame(translated_comments, columns=['Comment'])
-    return result_df 
+    return result_df
 
 def return_sentiment(text : str) -> np.int64 :
     inputs = fine_tuned_tokenizer(text, return_tensors="tf", padding="max_length", truncation=True, max_length=55)
@@ -178,7 +186,7 @@ def index():
         comment_count = int(request.form.get('comment_count', 10))
 
         if video_id:
-            comments_df = get_comments(video_id, max_results=comment_count * 2)
+            comments_df = get_comments(video_id, max_results=comment_count * 10)
             if not comments_df.empty:
                 sentiment_counts, comments_by_sentiment = get_sentiment(comments_df, comment_count)
                 top_comment = comments_df.iloc[0]["Comment"]
