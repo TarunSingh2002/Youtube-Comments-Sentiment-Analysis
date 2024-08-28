@@ -7,7 +7,62 @@
     <link rel="icon" href="https://yt-comment-section-sentiment-analysis.s3.amazonaws.com/favicon.ico">
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0E1117;
+            color: #ffffff;
+        }
+
+        h1 {
+            font-weight: 900; /* Extra bold */
+            margin-bottom: 90px; /* Margin bottom for space between heading and form */
+        }
+
+        .form-control {
+            background-color: #222933; /* Darker background for inputs */
+            color: #ffffff; /* Form text color */
+            border: none; /* Remove default border */
+            border-radius: 10px; /* Rounded corners */
+            width: 80%; /* Reduce width */
+            padding: 5px 15px; /* Adjust padding */
+            transition: border 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none; /* Remove blue outline */
+            border: 2px solid #f63366; /* Pink stroke on focus */
+        }
+
+        .btn-primary {
+            background-color: transparent;
+            border: 1px solid #a3a8b4; /* Default stroke color */
+            border-radius: 10px; /* More rounded corners */
+            color: #a3a8b4;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            border-color: #f63366; /* Stroke color on hover */
+            color: #f63366; /* Text color on hover */
+        }
+
+        .card-header {
+            background-color: #222933; /* Darker background for card headers */
+            border-bottom: none; /* Remove default border */
+            color: #ffffff;
+        }
+
+        .card-body {
+            background-color: #444; /* Slightly different shade for card body */
+            color: #ffffff;
+        }
+
+        label {
+            color: #ffffff;
+        }
+    </style>
 </head>
+
 <body>
     <div class="container mt-5">
         <h1 class="text-center">YouTube Comments Sentiment Analysis</h1>
@@ -15,7 +70,7 @@
         <form method="post">
             <div class="form-group">
                 <label for="video_url">Enter YouTube Video URL:</label>
-                <input type="text" id="video_url" name="video_url" class="form-control" placeholder="YouTube Video URL" required>
+                <input type="text" id="video_url" name="video_url" class="form-control" required>
             </div>
             <div class="form-group">
                 <label for="comment_count">Select Number of Comments:</label>

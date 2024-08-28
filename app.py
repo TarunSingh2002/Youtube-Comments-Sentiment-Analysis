@@ -121,10 +121,30 @@ def detect_and_translate(comments: pd.DataFrame, required_count=10):
             print(f"Translation error for comment at index {index}: {e}")
             other_language_comments.append('This is a neutral text')
     
-    # Step 2: Sort comments by word length
-    other_language_comments.sort(key=lambda x: len(x.split()), reverse=True)
-    hindi_comments.sort(key=lambda x: len(x.split()), reverse=True)
-    
+    # Step 2: Categorize by word count ranges
+    def categorize_by_length(comments):
+        priority_1 = []  # 20-30 words
+        priority_2 = []  # 30-40 words
+        priority_3 = []  # 0-20 words
+        priority_4 = []  # Rest
+        
+        for comment in comments:
+            word_count = len(comment.split())
+            if 20 <= word_count <= 30:
+                priority_1.append(comment)
+            elif 30 < word_count <= 40:
+                priority_2.append(comment)
+            elif word_count < 20:
+                priority_3.append(comment)
+            else:
+                priority_4.append(comment)
+        
+        # Concatenate all priority lists into one, respecting the order
+        return priority_1 + priority_2 + priority_3 + priority_4
+
+    other_language_comments = categorize_by_length(other_language_comments)
+    hindi_comments = categorize_by_length(hindi_comments)
+
     # Step 3: Collect the required number of comments
     while len(translated_comments) < required_count and other_language_comments:
         translated_comments.append(other_language_comments.pop(0))
