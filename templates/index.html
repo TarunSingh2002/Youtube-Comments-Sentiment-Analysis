@@ -14,11 +14,6 @@
             color: #ffffff;
         }
 
-        h1 {
-            font-weight: 900;
-            margin-bottom: 90px;
-        }
-
         .form-control {
             background-color: #222933;
             color: #ffffff;
@@ -81,6 +76,35 @@
         .hr {
             border-color: #ffffff;
         }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #333;
+            color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            border: 1px solid #f63366;
+            z-index: 1000;
+            display: none;
+        }
+
+        .text-center {
+            text-align: left!important;
+        }
+        
+        h1 {
+            margin-bottom: 60px;
+            font-weight: 900;
+        }
+
+        @media (max-width: 426px) {
+            h1 {
+                margin-bottom: 30px;
+            }
+        }
     </style>
 </head>
 
@@ -94,9 +118,9 @@
             </div>
             <div class="form-group">
                 <label for="comment_count">Select Number of Comments:</label>
-                <select id="comment_count" name="comment_count" class="form-control">
+                <select id="comment_count" name="comment_count" class="form-control" onchange="showNotification()">
                     {% for count in [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 125, 150, 175, 200, 250] %}
-                    <option value="{{ count }}">{{ count }}  (will take approx {{ count * 2 }} seconds)</option>
+                    <option value="{{ count }}">{{ count }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -125,8 +149,39 @@
         </div>
         {% endif %}
     </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        function showNotification() {
+            var selectBox = document.getElementById("comment_count");
+            var selectedValue = parseInt(selectBox.value);
+            var estimatedTime = selectedValue * 2; // Calculate the estimated time
+            var notificationText;
+            // Format time to minutes and seconds if more than 59 seconds
+            if (estimatedTime < 60) {
+                notificationText = "Model will take approx " + estimatedTime + " sec to complete this process.";
+            } else {
+                var minutes = Math.floor(estimatedTime / 60);
+                var seconds = estimatedTime % 60;
+                notificationText = "Model will take approx " + minutes + " min " + (seconds > 0 ? seconds + " sec" : "") + " to complete this process.";
+            }
+        
+            // Show notification
+            var notification = document.getElementById("notification");
+            notification.innerText = notificationText;
+            notification.style.display = "block";
+        
+                // Hide notification after 5 seconds
+            setTimeout(function () {
+                notification.style.display = "none";
+            }, 5000);
+        }
+    </script>
 </body>
 </html>
