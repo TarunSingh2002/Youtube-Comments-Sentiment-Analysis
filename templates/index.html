@@ -203,7 +203,7 @@
         function showNotification() {
             var selectBox = document.getElementById("comment_count");
             var selectedValue = parseInt(selectBox.value);
-            var estimatedTime = selectedValue * 2; 
+            var estimatedTime = selectedValue * 10; 
             var notificationText;
             
             if (estimatedTime < 60) {
@@ -234,7 +234,7 @@
             }, 30000); 
 
             setTimeout(function () {
-                loadingText.innerText = "Running model on the comments...";
+                loadingText.innerText = "Running model on the comments. Please be pationed this will take some time!!";
             }, 45000);
         }
     </script>
