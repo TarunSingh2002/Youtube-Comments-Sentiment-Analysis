@@ -118,6 +118,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+            text-align: center;
         }
 
         .spinner-border {
@@ -130,6 +131,16 @@
         .spinner-border-white {
             border-color: #f63366;
             border-right-color: transparent;
+        }
+
+        .loading-text {
+            color: #ffffff;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .sr-only {
+            align-items: center;
         }
     </style>
 </head>
@@ -185,6 +196,7 @@
             <div class="spinner-border spinner-border-white" role="status">
                 <span class="sr-only">Loading...</span>
             </div>
+            <div id="loading-text" class="loading-text">Model is loading...</div>
         </div>
     </div>
 
@@ -196,9 +208,9 @@
         function showNotification() {
             var selectBox = document.getElementById("comment_count");
             var selectedValue = parseInt(selectBox.value);
-            var estimatedTime = selectedValue * 2; // Calculate the estimated time
+            var estimatedTime = selectedValue * 2; 
             var notificationText;
-            // Format time to minutes and seconds if more than 59 seconds
+            
             if (estimatedTime < 60) {
                 notificationText = "Model will take approx " + estimatedTime + " sec to complete this process.";
             } else {
@@ -206,21 +218,29 @@
                 var seconds = estimatedTime % 60;
                 notificationText = "Model will take approx " + minutes + " min " + (seconds > 0 ? seconds + " sec" : "") + " to complete this process.";
             }
-        
-            // Show notification
+
             var notification = document.getElementById("notification");
             notification.innerText = notificationText;
             notification.style.display = "block";
-        
-            // Hide notification after 5 seconds
+
             setTimeout(function () {
                 notification.style.display = "none";
             }, 5000);
         }
 
         function showLoadingSpinner() {
-            // Show the loading overlay
             document.getElementById('loading-overlay').style.display = 'block';
+
+            var loadingText = document.getElementById('loading-text');
+            loadingText.innerText = "Loading the model...";
+
+            setTimeout(function () {
+                loadingText.innerText = "Fetching the Comments...";
+            }, 30000); 
+
+            setTimeout(function () {
+                loadingText.innerText = "Running model on the comments...";
+            }, 45000);
         }
     </script>
 </body>
