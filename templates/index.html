@@ -37,11 +37,6 @@
             color: #ffffff;
         }
 
-        .form-control select {
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
         .btn-primary {
             background-color: transparent !important;
             border: 1px solid #a3a8b4;
@@ -92,9 +87,9 @@
         }
 
         .text-center {
-            text-align: left!important;
+            text-align: left !important;
         }
-        
+
         h1 {
             margin-bottom: 60px;
             font-weight: 900;
@@ -105,13 +100,44 @@
                 margin-bottom: 30px;
             }
         }
+
+        /* Spinner and overlay styles */
+        #loading-overlay {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent background */
+            z-index: 2000; /* On top of other elements */
+        }
+
+        #loading-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            border-width: 0.4rem;
+        }
+
+        /* Custom spinner colors */
+        .spinner-border-white {
+            border-color: #f63366;
+            border-right-color: transparent;
+        }
     </style>
 </head>
 
 <body>
     <div class="container mt-5">
         <h1 class="text-center">YouTube Comments Sentiment Analysis</h1>
-        <form method="post">
+        <form method="post" onsubmit="showLoadingSpinner()">
             <div class="form-group">
                 <label for="video_url">Enter YouTube Video URL:</label>
                 <input type="text" id="video_url" name="video_url" class="form-control" required>
@@ -153,6 +179,15 @@
     <!-- Notification -->
     <div id="notification" class="notification"></div>
 
+    <!-- Loading Spinner and Overlay -->
+    <div id="loading-overlay">
+        <div id="loading-spinner" class="text-center">
+            <div class="spinner-border spinner-border-white" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
@@ -177,10 +212,15 @@
             notification.innerText = notificationText;
             notification.style.display = "block";
         
-                // Hide notification after 5 seconds
+            // Hide notification after 5 seconds
             setTimeout(function () {
                 notification.style.display = "none";
             }, 5000);
+        }
+
+        function showLoadingSpinner() {
+            // Show the loading overlay
+            document.getElementById('loading-overlay').style.display = 'block';
         }
     </script>
 </body>
