@@ -86,10 +86,6 @@
             display: none;
         }
 
-        .text-center {
-            text-align: left !important;
-        }
-
         h1 {
             margin-bottom: 60px;
             font-weight: 900;
@@ -111,13 +107,12 @@
             height: 100%;
             background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent background */
             z-index: 2000; /* On top of other elements */
+            display: none; /* Changed to none by default */
+            align-items: center;
+            justify-content: center;
         }
 
         #loading-spinner {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
             text-align: center;
         }
 
@@ -229,7 +224,7 @@
         }
 
         function showLoadingSpinner() {
-            document.getElementById('loading-overlay').style.display = 'block';
+            document.getElementById('loading-overlay').style.display = 'flex';
 
             var loadingText = document.getElementById('loading-text');
             loadingText.innerText = "Loading the model...";
