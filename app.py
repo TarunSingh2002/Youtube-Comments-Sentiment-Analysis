@@ -223,3 +223,6 @@ def index():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+# def handler(event, context):
+#     return awsgi.response(app, event, context)
