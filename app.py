@@ -14,6 +14,7 @@ from flask import Flask, request, jsonify, render_template
 app = Flask(__name__)
 load_dotenv()
 api_keys = os.getenv("YOUTUBE_API_KEYS").split(',')
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 tokenizer_path = 'model/saved_tokenizer'
 model_path = 'model/transformer'
