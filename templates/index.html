@@ -197,7 +197,7 @@
         function showNotification() {
             var selectBox = document.getElementById("comment_count");
             var selectedValue = parseInt(selectBox.value);
-            var estimatedTime = selectedValue * 10; 
+            var estimatedTime = selectedValue * 14; 
             var notificationText;
             
             if (estimatedTime < 60) {
@@ -229,7 +229,7 @@
             }, 45000);
             var selectBox = document.getElementById("comment_count");
             var selectedValue = parseInt(selectBox.value);
-            var estimatedTime = selectedValue * 10;
+            var estimatedTime = selectedValue * 14;
             var countdownElement = document.getElementById('countdown-timer');
             countdownElement.innerText = "Time remaining: " + formatTime(estimatedTime);
             var countdownInterval = setInterval(function () {

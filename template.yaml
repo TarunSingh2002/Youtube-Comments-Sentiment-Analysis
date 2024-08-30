@@ -10,9 +10,9 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       PackageType: Image
-      ImageUri: Account.dkr.ecr.Region.amazonaws.com/YoutubeCommentsSentimentAnalysis:latest
+      ImageUri: youtubecommentssentimentanalysis:latest
       Timeout: 900
-      MemorySize: 600
+      MemorySize: 8024
       Role: !GetAtt YoutubeCommentsSentimentAnalysisExecutionRole.Arn
       Environment:
         Variables:

@@ -221,8 +221,8 @@ def index():
     
     return render_template('index.html', sentiment_counts={}, comments_by_sentiment={})
 
-if __name__ == "__main__":
-    app.run(debug=True)
+# if __name__ == "__main__":
+#     app.run(debug=True)
 
-# def handler(event, context):
-#     return awsgi.response(app, event, context)
+def handler(event, context):
+    return awsgi.response(app, event, context)
