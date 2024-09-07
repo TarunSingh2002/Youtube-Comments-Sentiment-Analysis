@@ -4,12 +4,12 @@ import emoji
 import awsgi
 import numpy as np
 import pandas as pd
-import tensorflow as tf
 from dotenv import load_dotenv
+import tensorflow.lite as tflite
 from googletrans import Translator
 from transformers import AutoTokenizer
 from googleapiclient.discovery import build
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, render_template
 
 app = Flask(__name__)
 load_dotenv()
@@ -17,21 +17,23 @@ api_keys = os.getenv("YOUTUBE_API_KEYS").split(',')
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 tokenizer_path = 'model/saved_tokenizer'
-model_path = 'model/transformer'
+model_path = 'model/model_float16.tflite'
 
 fine_tuned_tokenizer = None
-fine_tuned_model = None
+interpreter = None
+input_details = None
+output_details = None
 SENTIMENT_LABELS = {0: 'Sadness', 1: 'Joy', 2: 'Love', 3: 'Annoyed', 4: 'Fear', 5: 'Surprise'}
 
-# load model and tokenizer
 def load_model_and_tokenizer():
-    global fine_tuned_tokenizer, fine_tuned_model
-    if fine_tuned_tokenizer is None or fine_tuned_model is None:
+    global fine_tuned_tokenizer, interpreter, input_details, output_details
+    if fine_tuned_tokenizer is None or interpreter is None or input_details is None or output_details is None:
         fine_tuned_tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
-        fine_tuned_model = tf.saved_model.load(model_path)
-        # print("model is loaded successfully")
+        interpreter = tflite.Interpreter(model_path=model_path)
+        interpreter.allocate_tensors()
+        input_details = interpreter.get_input_details()
+        output_details = interpreter.get_output_details()
 
-#  Get the comments form video
 def build_youtube_client(api_key):
     return build('youtube', 'v3', developerKey=api_key)
 
@@ -92,11 +94,13 @@ def extract_youtube_video_id(url):
 def trim_whitespace(s):
     return s.strip()
 
-# Text Pre Processing
 def remove_emojis(text):
-  return emoji.replace_emoji(text, replace="")
+  text = emoji.replace_emoji(text, replace="")
+  if text =='':
+    return 'This is a empty comment'
+  else : 
+    return text
 
-# Get the Sentiments form the text
 def detect_and_translate(comments: pd.DataFrame, required_count=10):
     translator = Translator()
     translated_comments = []
@@ -165,17 +169,31 @@ def detect_and_translate(comments: pd.DataFrame, required_count=10):
     result_df = pd.DataFrame(translated_comments, columns=['Comment'])
     return result_df
 
-def return_sentiment(text : str) -> np.int64 :
-    inputs = fine_tuned_tokenizer(text, return_tensors="tf", padding="max_length", truncation=True, max_length=55)
-    input_dict = {
-        'input_ids': tf.cast(inputs['input_ids'], tf.int64),
-        'attention_mask': tf.cast(inputs['attention_mask'], tf.int64),
-        'token_type_ids': tf.cast(inputs['token_type_ids'], tf.int64)
-        }
-    outputs = fine_tuned_model(input_dict)
-    probabilities = tf.nn.softmax(outputs, axis=-1) 
-    probabilities_np = probabilities.numpy()[0] 
-    predicted_index = np.argmax(probabilities_np)
+def tflite_predict(text):
+    # Tokenize input text
+    inputs = fine_tuned_tokenizer(text, return_tensors="np", padding="max_length", truncation=True, max_length=55)
+    
+    # Prepare input data for the TFLite model
+    input_ids = inputs["input_ids"].flatten()
+    attention_mask = inputs["attention_mask"].flatten()
+    token_type_ids = inputs["token_type_ids"].flatten()
+    
+    # Ensure inputs are reshaped to match expected input shapes (batch size 1)
+    input_ids = np.expand_dims(input_ids, axis=0).astype(np.int64)           # Reshape to (1, 55) and cast to INT64
+    attention_mask = np.expand_dims(attention_mask, axis=0).astype(np.int64) # Reshape to (1, 55) and cast to INT64
+    token_type_ids = np.expand_dims(token_type_ids, axis=0).astype(np.int64) # Reshape to (1, 55) and cast to INT64
+    
+    # Set the input tensors
+    interpreter.set_tensor(input_details[1]['index'], input_ids)
+    interpreter.set_tensor(input_details[0]['index'], attention_mask)
+    interpreter.set_tensor(input_details[2]['index'], token_type_ids)
+    
+    # Run inference
+    interpreter.invoke()
+    
+    # Get the output and process it
+    output = interpreter.get_tensor(output_details[0]['index'])
+    predicted_index = np.argmax(output, axis=1)[0]
     return predicted_index
 
 def text_pre_processing(translated_comment: pd.DataFrame) -> pd.DataFrame:
@@ -190,18 +208,17 @@ def get_sentiment(comments_df : pd.DataFrame,comment_count=10) -> tuple:
     comments_by_sentiment = {'Sadness': [], 'Joy': [], 'Love': [], 'Annoyed': [], 'Fear': [], 'Surprise': []}
     translated_comment = detect_and_translate(comments_df,comment_count)
     pre_processed_comments = text_pre_processing(translated_comment)
+    load_model_and_tokenizer()
     for index, row in pre_processed_comments.iterrows():
-        sentiment_index = return_sentiment(row['Comment'])  
+        sentiment_index = tflite_predict(row['Comment'])  
         sentiment_label = SENTIMENT_LABELS[sentiment_index] 
         sentiment_counts[sentiment_label]+=1
         comments_by_sentiment[sentiment_label].append(row['Comment'])
     return (sentiment_counts,comments_by_sentiment)
 
-# Flask App
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        load_model_and_tokenizer()
         video_url = trim_whitespace(request.form.get('video_url'))
         video_id = extract_youtube_video_id(video_url)
         comment_count = int(request.form.get('comment_count', 10))
