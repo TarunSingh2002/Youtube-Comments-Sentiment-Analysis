@@ -1,13 +1,9 @@
 google-api-python-client
-python-dotenv
-aws-wsgi
 transformers==4.42.4
-tflite
+tensorflow-cpu==2.17.0
 pandas
-datasets
-tf-keras
-textblob
 Flask
 emoji
-sentencepiece 
-googletrans==4.0.0-rc1
+gunicorn 
+googletrans==3.1.0a0
+pycld3
