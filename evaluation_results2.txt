@@ -1,0 +1,2 @@
+Accuracy of the TFLite model on test dataset: 0.9110
+Accuracy of the TFLite model on validation dataset: 0.9170

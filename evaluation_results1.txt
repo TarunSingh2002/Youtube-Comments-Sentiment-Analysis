@@ -1,0 +1,2 @@
+Accuracy of the Transformer model on test dataset: 0.9194999933242798
+Loss of the Transformer model on test dataset: 0.3565610647201538
