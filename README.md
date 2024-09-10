@@ -10,7 +10,7 @@ Welcome to the YouTube Comment Sentiment Analyzer! This project leverages deep l
     <td>Application</td> 
   </tr>
   <tr>
-    <td><video src="https://github.com/user-attachments/assets/a98ddce1-e7ff-45f2-8433-46cd6b719e70" style="width:100%;"></video></td>
+    <td><video src="https://github.com/user-attachments/assets/cb12247c-f07a-4650-a281-f2d13a71843a" style="width:100%;"></video></td>
   </tr>
  </table>
  </p>
