@@ -2,11 +2,11 @@
 
 **[Check out the live project here!](https://tarun-singh-youtube-video-comments-sentiment-analysis.hf.space)**
 
-Welcome to the YouTube Comment Emotion Analyzer! This project leverages deep learning transformers to classify YouTube comments into six distinct emotions.
+Welcome to the YouTube Comment Sentiment Analyzer! This project leverages deep learning transformers to classify YouTube comments into six distinct emotions.
 
 <table border="2" style="width:100%; border-collapse: collapse;">
   <tr>
-    <td><img src="https://github.com/user-attachments/assets/b5d9b774-0695-4cf9-912c-c93e052701ca" alt="Project Image 1" style="width:100%;"></td>
+    <td><img src="https://github.com/user-attachments/assets/9fad4706-62f0-4175-904c-64cf611b2d22" alt="Project GIF" style="width:100%;"></td>
   </tr>
 </table>
 
@@ -20,40 +20,38 @@ Welcome to the YouTube Comment Emotion Analyzer! This project leverages deep lea
 
 ## Project Overview
 
-The YouTube Comment Emotion Analyzer is a machine learning-based application designed to classify emotions in YouTube comments. It utilizes a pre-trained transformer model (MobileBERT) fine-tuned on the DAIR AI Emotion dataset, which is then optimized and deployed in TensorFlow Lite format. The model processes comments, translates them to English (if necessary), and classifies them into one of six emotions: Sadness, Joy, Love, Annoyed, Fear, and Surprise. The application is hosted via a web interface and deployed on Hugging Face Spaces for easy access.
+The YouTube Comment Emotion Analyzer is a deep learning application that uses the YouTube API to fetch real-time comments from any video and classify them into six emotions: Sadness, Joy, Love, Annoyed, Fear, and Surprise. It leverages a MobileBERT transformer model fine-tuned on the DAIR AI Emotion dataset, further optimized using Float16 Quantization for enhanced performance. The model is deployed in TensorFlow Lite format to ensure efficient classification. The application is built with Flask, containerized with Docker, and deployed on Hugging Face Spaces.
 
 ## Features
 
-- **MobileBERT Transformer Model:** A compact, pre-trained transformer model fine-tuned on the DAIR AI Emotion dataset to classify emotions with high accuracy.
+- **MobileBERT Transformer Model:** A compact, pre-trained transformer model fine-tuned on the DAIR AI Emotion dataset.
 - **TensorFlow Lite with Float16 Quantization:** The model is converted to TensorFlow Lite format with Float16 Quantization to ensure it is optimized for performance in real-time applications.
-- **YouTube API Integration:** Fetches YouTube comments in real-time, processing them for emotional analysis.
-- **Translation Module:** Automatically translates non-English comments into English before analysis to ensure accurate emotion detection.
-- **Emotion Classification:** Classifies comments into six emotions—Sadness, Joy, Love, Annoyed, Fear, and Surprise—and displays the count for each.
-- **Flask Web Interface:** A user-friendly web interface built using Flask, HTML, CSS, and JavaScript allows users to input a YouTube video URL and retrieve classified comment results.
+- **Flask Web Interface:** A clean, easy-to-use web app built with Flask, using HTML, CSS, and JavaScript.
 - **Dockerized:** The entire application is containerized using Docker for consistent deployment and scalability.
 - **Deployed on Hugging Face Spaces:** Easily accessible as a web app hosted on Hugging Face Spaces for seamless user experience.
 
 ## Project Structure
 
 ```markdown
-├── .dvc                         <- DVC configuration file for data version control.
-├── notebook                     <- Source code used in this project.
-│   ├── converting-model.ipynb   <- 
-│   ├── model-training.ipynb     <- 
-│   └── accuracy.ipynb           <- 
-├── templates                    <-
-│   └── index.html               <- HTML template for the web app.
-├── .dvcignore                   <- Specifies which files to ignore in the version control.
-├── .gitattributes               <- 
-├── .gitignore                   <- Specifies which files to ignore in the version control.
-├── app.py                       <- Main Flask application file.
-├── Dockerfile                   <- Dockerfile for containerizing the app.
-├── evaluation_results1          <- store accuracy and loss of tarnsformer model 
-├── evaluation_results2          <- store accuracy of tflite model
-├── LICENSE                      <- DVC ignore.
-├── model.dvc                    <- 
-├── README.md                    <- The top-level README for developers using this project.
-├── requirements.txt             <- The requirements file for reproducing the environment.
+├── .dvc                         <- DVC configuration file for managing dataset version control.
+├── notebook                     <- Jupyter Notebooks used for training and converting the model.
+│   ├── converting-model.ipynb   <- Notebook for converting the model to TensorFlow Lite format.
+│   ├── model-training.ipynb     <- Notebook used for training the transformer model on the emotion dataset.
+│   └── accuracy.ipynb           <- Notebook for analyzing the accuracy of both the transformer and TFLite models.
+├── templates                    <- HTML template for the Flask web application.
+│   └── index.html               <- Main interface template for the web app.
+├── .dvcignore                   <- File specifying files to ignore for dataset version control.
+├── .gitattributes               <- Git configuration for handling file attributes and version control.
+├── .gitignore                   <- File specifying which files and directories to ignore for version control.
+├── app.py                       <- The main Flask application file that handles request routing and logic.
+├── Dockerfile                   <- Docker configuration file for containerizing the app.
+├── evaluation_results1          <- Contains evaluation results (accuracy, loss) of the transformer model.
+├── evaluation_results2          <- Contains evaluation results for the TensorFlow Lite model.
+├── LICENSE                      <- License for the project.
+├── model.dvc                    <- DVC file for managing model version control.
+├── README.md                    <- The main README file providing an overview and instructions for developers.
+├── requirements.txt             <- List of dependencies needed to run the application.
+```
 
 ## License
 
@@ -83,4 +81,4 @@ SOFTWARE.
 
 ## Acknowledgments
 
-This project would not have been possible without the works of **J.K. Rowling** and her creation of the Harry Potter series. The text from the seven books serves as the foundation for the vector database used in this application. Special thanks to the entire **Harry Potter fandom** for keeping the magic alive and inspiring projects like this one.
+This project owes its success to the invaluable resources provided by Hugging Face Spaces for hosting the application, and Hugging Face Transformers for the pre-trained MobileBERT model. Special thanks to the creators of the DAIR AI Emotion Dataset for supplying the essential data used for emotion classification, and to the YouTube API for enabling seamless retrieval of real-time video comments, which made the emotional analysis possible.
