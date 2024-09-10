@@ -4,11 +4,16 @@
 
 Welcome to the YouTube Comment Sentiment Analyzer! This project leverages deep learning transformers to classify YouTube comments into six distinct emotions.
 
-<table border="2" style="width:100%; border-collapse: collapse;">
+<p align="center" float="left">
+<table>
   <tr>
-    <td><img src="https://github.com/user-attachments/assets/9fad4706-62f0-4175-904c-64cf611b2d22" alt="Project GIF" style="width:100%;"></td>
+    <td>Application</td> 
   </tr>
-</table>
+  <tr>
+    <td><video src="https://github.com/user-attachments/assets/a98ddce1-e7ff-45f2-8433-46cd6b719e70" style="width:100%;"></video></td>
+  </tr>
+ </table>
+ </p>
 
 ## Table of Contents
 
